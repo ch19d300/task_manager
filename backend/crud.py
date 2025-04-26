@@ -29,92 +29,92 @@ def create_user(db: Session, user: schemas.UserCreate):
     return db_user
 
 
-# Team CRUD operations
-def get_teams(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Team).offset(skip).limit(limit).all()
-
-
-def get_team(db: Session, team_id: int):
-    return db.query(models.Team).filter(models.Team.id == team_id).first()
-
-
-def create_team(db: Session, team: schemas.TeamCreate):
-    db_team = models.Team(**team.dict())
-    db.add(db_team)
-    db.commit()
-    db.refresh(db_team)
-    return db_team
-
-
-def update_team(db: Session, team_id: int, team: schemas.TeamUpdate):
-    db_team = get_team(db, team_id)
-    for key, value in team.dict().items():
-        setattr(db_team, key, value)
-    db.commit()
-    db.refresh(db_team)
-    return db_team
-
-
-def delete_team(db: Session, team_id: int):
-    db_team = get_team(db, team_id)
-    db.delete(db_team)
-    db.commit()
-    return db_team
-
-
 # Member CRUD operations
-def get_members(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Member).offset(skip).limit(limit).all()
+def get_members(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.Member).filter(models.Member.user_id == user_id).offset(skip).limit(limit).all()
 
 
 def get_member(db: Session, member_id: int):
     return db.query(models.Member).filter(models.Member.id == member_id).first()
 
 
-def create_member(db: Session, member: schemas.MemberCreate):
-    db_member = models.Member(**member.dict())
-    db.add(db_member)
-    db.commit()
-    db.refresh(db_member)
-    return db_member
+def create_member(db: Session, member: schemas.MemberCreate, user_id: int):
+    try:
+        # Build member data dict for compatibility
+        member_dict = member.dict(exclude_unset=True)
+        member_dict['user_id'] = user_id
+
+        # Print debug info
+        print(f"Creating member with data: {member_dict}")
+
+        db_member = models.Member(**member_dict)
+        db.add(db_member)
+        db.commit()
+        db.refresh(db_member)
+        return db_member
+    except Exception as e:
+        db.rollback()
+        print(f"Error creating member: {e}")
+        raise
 
 
 def update_member(db: Session, member_id: int, member: schemas.MemberUpdate):
-    db_member = get_member(db, member_id)
-    for key, value in member.dict().items():
-        setattr(db_member, key, value)
-    db.commit()
-    db.refresh(db_member)
-    return db_member
+    try:
+        db_member = get_member(db, member_id)
+
+        # Only include fields that were actually provided (exclude_unset=True)
+        update_data = member.dict(exclude_unset=True)
+        print(f"Updating member with data: {update_data}")
+
+        for key, value in update_data.items():
+            setattr(db_member, key, value)
+
+        db.commit()
+        db.refresh(db_member)
+        return db_member
+    except Exception as e:
+        db.rollback()
+        print(f"Error updating member: {e}")
+        raise
 
 
 def delete_member(db: Session, member_id: int):
-    db_member = get_member(db, member_id)
-    db.delete(db_member)
-    db.commit()
-    return db_member
+    try:
+        db_member = get_member(db, member_id)
+        db.delete(db_member)
+        db.commit()
+        return db_member
+    except Exception as e:
+        db.rollback()
+        print(f"Error deleting member: {e}")
+        raise
 
 
 # Task CRUD operations
 def get_tasks(
         db: Session,
+        user_id: int,
         skip: int = 0,
         limit: int = 100,
         member_id: Optional[int] = None,
-        team_id: Optional[int] = None,
         status: Optional[str] = None,
         search: Optional[str] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None
 ):
-    query = db.query(models.Task)
+    # Get member IDs that belong to the user
+    member_ids = [member.id for member in db.query(models.Member).filter(models.Member.user_id == user_id).all()]
+
+    query = db.query(models.Task).filter(
+        or_(
+            models.Task.creator_id == user_id,
+            models.Task.assignee_id.in_(member_ids)
+        )
+    )
 
     # Apply filters
     if member_id:
         query = query.filter(models.Task.assignee_id == member_id)
-
-    if team_id:
-        query = query.filter(models.Task.team_id == team_id)
 
     if status:
         query = query.filter(models.Task.status == status)

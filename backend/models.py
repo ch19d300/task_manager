@@ -29,18 +29,7 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     tasks = relationship("Task", back_populates="creator")
-
-class Team(Base):
-    __tablename__ = "teams"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    description = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    members = relationship("Member", back_populates="team")
-    tasks = relationship("Task", back_populates="team")
+    members = relationship("Member", back_populates="user")
 
 class Member(Base):
     __tablename__ = "members"
@@ -49,11 +38,11 @@ class Member(Base):
     name = Column(String, index=True)
     email = Column(String, index=True)
     role = Column(String, nullable=True)
-    team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    team = relationship("Team", back_populates="members")
+    user = relationship("User", back_populates="members")
     tasks = relationship("Task", back_populates="assignee")
 
 class Task(Base):
@@ -68,10 +57,8 @@ class Task(Base):
     end_date = Column(DateTime(timezone=True))
     creator_id = Column(Integer, ForeignKey("users.id"))
     assignee_id = Column(Integer, ForeignKey("members.id"))
-    team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     creator = relationship("User", back_populates="tasks")
     assignee = relationship("Member", back_populates="tasks")
-    team = relationship("Team", back_populates="tasks")

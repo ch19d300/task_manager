@@ -6,7 +6,6 @@ import {
   CalendarOutlined,
   UnorderedListOutlined,
   UserOutlined,
-  TeamOutlined,
   PlusOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
@@ -18,7 +17,6 @@ import TaskCalendarView from './components/TaskCalendarView';
 import TaskListView from './components/TaskListView';
 import TaskForm from './components/TaskForm';
 import MemberManagement from './components/MemberManagement';
-import TeamManagement from './components/TeamManagement';
 import Login from './components/Login';
 import Register from './components/Register';
 import { logout } from './services/api';
@@ -86,9 +84,6 @@ const App = () => {
             <Menu.Item key="4" icon={<UserOutlined />}>
               <Link to="/members">Members</Link>
             </Menu.Item>
-            <Menu.Item key="5" icon={<TeamOutlined />}>
-              <Link to="/teams">Teams</Link>
-            </Menu.Item>
           </Menu>
         </Sider>
         <Layout className="site-layout">
@@ -131,7 +126,6 @@ const App = () => {
               <Route path="/list" element={<TaskListView />} />
               <Route path="/create" element={<TaskForm />} />
               <Route path="/members" element={<MemberManagement />} />
-              <Route path="/teams" element={<TeamManagement />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Content>

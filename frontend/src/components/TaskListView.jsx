@@ -8,7 +8,8 @@ import {
   Select,
   DatePicker,
   Input,
-  message
+  message,
+  Typography
 } from 'antd';
 import {
   EditOutlined,
@@ -16,36 +17,33 @@ import {
   CheckCircleOutlined,
   SearchOutlined
 } from '@ant-design/icons';
-import { getTasks, updateTaskStatus, deleteTask, getMembers, getTeams } from '../services/api';
+import { getTasks, updateTaskStatus, deleteTask, getMembers } from '../services/api';
 import moment from 'moment';
+import { useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+const { Title } = Typography;
 
 const TaskListView = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState([]);
-  const [teams, setTeams] = useState([]);
   const [filters, setFilters] = useState({
     memberId: null,
-    teamId: null,
     status: null,
     dateRange: null,
     search: ''
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFiltersData = async () => {
       try {
-        const [membersData, teamsData] = await Promise.all([
-          getMembers(),
-          getTeams()
-        ]);
+        const membersData = await getMembers();
         setMembers(membersData);
-        setTeams(teamsData);
       } catch (error) {
-        message.error('Failed to load filters data');
+        message.error('Failed to load members data');
         console.error(error);
       }
     };
@@ -64,11 +62,7 @@ const TaskListView = () => {
       const queryParams = {};
 
       if (filters.memberId) {
-        queryParams.memberId = filters.memberId;
-      }
-
-      if (filters.teamId) {
-        queryParams.teamId = filters.teamId;
+        queryParams.member_id = filters.memberId;
       }
 
       if (filters.status) {
@@ -76,8 +70,8 @@ const TaskListView = () => {
       }
 
       if (filters.dateRange) {
-        queryParams.startDate = filters.dateRange[0].format('YYYY-MM-DD');
-        queryParams.endDate = filters.dateRange[1].format('YYYY-MM-DD');
+        queryParams.start_date = filters.dateRange[0].format('YYYY-MM-DD');
+        queryParams.end_date = filters.dateRange[1].format('YYYY-MM-DD');
       }
 
       if (filters.search) {
@@ -166,24 +160,18 @@ const TaskListView = () => {
       sorter: (a, b) => a.assignee.name.localeCompare(b.assignee.name),
     },
     {
-      title: 'Team',
-      dataIndex: 'team',
-      key: 'team',
-      render: team => team?.name || 'N/A',
-    },
-    {
       title: 'Start Date',
-      dataIndex: 'startDate',
-      key: 'startDate',
+      dataIndex: 'start_date',
+      key: 'start_date',
       render: date => moment(date).format('YYYY-MM-DD'),
-      sorter: (a, b) => moment(a.startDate).unix() - moment(b.startDate).unix(),
+      sorter: (a, b) => moment(a.start_date).unix() - moment(b.start_date).unix(),
     },
     {
       title: 'End Date',
-      dataIndex: 'endDate',
-      key: 'endDate',
+      dataIndex: 'end_date',
+      key: 'end_date',
       render: date => moment(date).format('YYYY-MM-DD'),
-      sorter: (a, b) => moment(a.endDate).unix() - moment(b.endDate).unix(),
+      sorter: (a, b) => moment(a.end_date).unix() - moment(b.end_date).unix(),
     },
     {
       title: 'Status',
@@ -215,17 +203,14 @@ const TaskListView = () => {
             icon={<CheckCircleOutlined />}
             onClick={() => handleUpdateStatus(record.id, 'completed')}
             disabled={record.status === 'completed'}
-          />
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => {/* Handle edit task */}}
+            title="Mark as Complete"
           />
           <Button
             type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteTask(record.id)}
+            title="Delete Task"
           />
         </Space>
       ),
@@ -233,7 +218,14 @@ const TaskListView = () => {
   ];
 
   return (
-    <div className="list-view">
+    <div className="task-list-view">
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Title level={2}>Task List</Title>
+        <Button type="primary" onClick={() => navigate('/create')}>
+          Create New Task
+        </Button>
+      </div>
+
       <div className="filters" style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
         <Input
           placeholder="Search tasks"
@@ -257,17 +249,6 @@ const TaskListView = () => {
         <Select
           allowClear
           style={{ width: 200 }}
-          placeholder="Filter by Team"
-          onChange={(value) => handleFilterChange('teamId', value)}
-        >
-          {teams.map(team => (
-            <Option key={team.id} value={team.id}>{team.name}</Option>
-          ))}
-        </Select>
-
-        <Select
-          allowClear
-          style={{ width: 200 }}
           placeholder="Filter by Status"
           onChange={(value) => handleFilterChange('status', value)}
         >
@@ -280,6 +261,7 @@ const TaskListView = () => {
         <RangePicker
           style={{ width: 300 }}
           onChange={(dates) => handleFilterChange('dateRange', dates)}
+          placeholder={['Start Date', 'End Date']}
         />
       </div>
 
@@ -289,6 +271,7 @@ const TaskListView = () => {
         rowKey="id"
         loading={loading}
         pagination={{ pageSize: 10 }}
+        locale={{ emptyText: 'No tasks found. Try creating a new task!' }}
       />
     </div>
   );

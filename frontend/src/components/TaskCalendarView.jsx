@@ -1,32 +1,27 @@
 // TaskCalendarView.jsx
 import React, { useState, useEffect } from 'react';
-import { Calendar, Badge, Select, Spin, message } from 'antd';
-import { getTasks, getMembers, getTeams } from '../services/api';
+import { Calendar, Badge, Select, Spin, message, Typography, Tooltip } from 'antd';
+import { getTasks, getMembers } from '../services/api';
 import moment from 'moment';
 
 const { Option } = Select;
+const { Title } = Typography;
 
 const TaskCalendarView = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState([]);
-  const [teams, setTeams] = useState([]);
   const [filters, setFilters] = useState({
-    memberId: null,
-    teamId: null
+    memberId: null
   });
 
   useEffect(() => {
     const fetchFiltersData = async () => {
       try {
-        const [membersData, teamsData] = await Promise.all([
-          getMembers(),
-          getTeams()
-        ]);
+        const membersData = await getMembers();
         setMembers(membersData);
-        setTeams(teamsData);
       } catch (error) {
-        message.error('Failed to load filters data');
+        message.error('Failed to load members data');
         console.error(error);
       }
     };
@@ -44,11 +39,7 @@ const TaskCalendarView = () => {
       const queryParams = {};
 
       if (filters.memberId) {
-        queryParams.memberId = filters.memberId;
-      }
-
-      if (filters.teamId) {
-        queryParams.teamId = filters.teamId;
+        queryParams.member_id = filters.memberId;
       }
 
       const tasksData = await getTasks(queryParams);
@@ -71,8 +62,8 @@ const TaskCalendarView = () => {
   const getTasksForDate = (date) => {
     const dateStr = date.format('YYYY-MM-DD');
     return tasks.filter(task => {
-      const startDate = moment(task.startDate);
-      const endDate = moment(task.endDate);
+      const startDate = moment(task.start_date);
+      const endDate = moment(task.end_date);
       return date.isSameOrAfter(startDate, 'day') && date.isSameOrBefore(endDate, 'day');
     });
   };
@@ -81,13 +72,15 @@ const TaskCalendarView = () => {
     const tasksForDate = getTasksForDate(date);
 
     return (
-      <ul className="events">
+      <ul className="events" style={{ listStyleType: 'none', margin: 0, padding: 0 }}>
         {tasksForDate.map(task => (
-          <li key={task.id}>
-            <Badge
-              status={getPriorityColor(task.priority)}
-              text={<span style={{ fontSize: '12px' }}>{task.title}</span>}
-            />
+          <li key={task.id} style={{ marginBottom: '2px' }}>
+            <Tooltip title={`${task.description || 'No description'} (Assigned to: ${task.assignee.name})`}>
+              <Badge
+                status={getPriorityColor(task.priority)}
+                text={<span style={{ fontSize: '12px' }}>{task.title}</span>}
+              />
+            </Tooltip>
           </li>
         ))}
       </ul>
@@ -109,7 +102,8 @@ const TaskCalendarView = () => {
 
   return (
     <div className="calendar-view">
-      <div className="filters" style={{ marginBottom: '20px', display: 'flex', gap: '16px' }}>
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Title level={2}>Task Calendar</Title>
         <Select
           allowClear
           style={{ width: 200 }}
@@ -118,17 +112,6 @@ const TaskCalendarView = () => {
         >
           {members.map(member => (
             <Option key={member.id} value={member.id}>{member.name}</Option>
-          ))}
-        </Select>
-
-        <Select
-          allowClear
-          style={{ width: 200 }}
-          placeholder="Filter by Team"
-          onChange={(value) => handleFilterChange('teamId', value)}
-        >
-          {teams.map(team => (
-            <Option key={team.id} value={team.id}>{team.name}</Option>
           ))}
         </Select>
       </div>

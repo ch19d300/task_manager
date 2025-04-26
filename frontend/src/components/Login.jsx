@@ -18,39 +18,51 @@ const handleSubmit = async (values) => {
     setLoading(true);
     setError('');
 
+    console.log('Submitting login form:', values.email);
+
     // Call your API
     await login(values);
+
+    console.log('Login successful, redirecting to home');
 
     // Force a page reload and redirect to home
     window.location.href = '/';
   } catch (err) {
-    setError(err.response?.data?.detail || 'Login failed. Please try again.');
     console.error('Login error:', err);
+
+    let errorMessage = 'Login failed. Please try again.';
+
+    if (err.response && err.response.data) {
+      console.error('Server response:', err.response.data);
+      errorMessage = err.response.data.detail || errorMessage;
+    }
+
+    setError(errorMessage);
   } finally {
     setLoading(false);
   }
 };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
       minHeight: '100vh',
       background: '#f0f2f5'
     }}>
-      <Card 
-        style={{ 
-          width: 400, 
+      <Card
+        style={{
+          width: 400,
           boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-          borderRadius: '8px' 
+          borderRadius: '8px'
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <Title level={2}>Task Management</Title>
           <Title level={4}>Admin Login</Title>
         </div>
-        
+
         {error && (
           <Alert
             message="Login Error"
@@ -60,7 +72,7 @@ const handleSubmit = async (values) => {
             style={{ marginBottom: '16px' }}
           />
         )}
-        
+
         <Form
           name="login"
           initialValues={{ remember: true }}
@@ -74,13 +86,13 @@ const handleSubmit = async (values) => {
               { type: 'email', message: 'Please enter a valid email' }
             ]}
           >
-            <Input 
-              prefix={<UserOutlined />} 
-              placeholder="Email" 
+            <Input
+              prefix={<UserOutlined />}
+              placeholder="Email"
               size="large"
             />
           </Form.Item>
-          
+
           <Form.Item
             name="password"
             rules={[{ required: true, message: 'Please input your password!' }]}
@@ -91,11 +103,11 @@ const handleSubmit = async (values) => {
               size="large"
             />
           </Form.Item>
-          
+
           <Form.Item>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              type="primary"
+              htmlType="submit"
               loading={loading}
               block
               size="large"
@@ -103,7 +115,7 @@ const handleSubmit = async (values) => {
               Log in
             </Button>
           </Form.Item>
-          
+
           <div style={{ textAlign: 'center' }}>
             <p>
               Don't have an account? <a href="/register">Register now</a>

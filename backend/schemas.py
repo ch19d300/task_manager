@@ -30,50 +30,33 @@ class User(UserBase):
         orm_mode = True
 
 
-# Team schemas
-class TeamBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-
-
-class TeamCreate(TeamBase):
-    pass
-
-
-class TeamUpdate(TeamBase):
-    pass
-
-
-class Team(TeamBase):
-    id: int
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
-
-
 # Member schemas
 class MemberBase(BaseModel):
     name: str
     email: EmailStr
     role: Optional[str] = None
-    team_id: Optional[int] = None
 
 
-class MemberCreate(MemberBase):
-    pass
+class MemberCreate(BaseModel):
+    name: str
+    email: EmailStr
+    role: Optional[str] = None
 
 
-class MemberUpdate(MemberBase):
-    pass
+class MemberUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
 
 
-class Member(MemberBase):
+class Member(BaseModel):
     id: int
+    name: str
+    email: EmailStr
+    role: Optional[str] = None
+    user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    team: Optional[Team] = None
 
     class Config:
         orm_mode = True
@@ -88,7 +71,6 @@ class TaskBase(BaseModel):
     start_date: datetime
     end_date: datetime
     assignee_id: int
-    team_id: Optional[int] = None
 
 
 class TaskCreate(TaskBase):
@@ -109,7 +91,6 @@ class Task(TaskBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     assignee: Member
-    team: Optional[Team] = None
 
     class Config:
         orm_mode = True

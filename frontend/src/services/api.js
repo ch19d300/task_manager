@@ -1,9 +1,9 @@
-// services/api.js - Fixed version
+// services/api.js
 import axios from 'axios';
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -14,18 +14,32 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
+      // Make sure we're using the correct format for Authorization header
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Adding token to request:', config.url);
+    } else {
+      console.log('No token found in localStorage');
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
 );
 
-// Add response interceptor for better error handling
+// Add response interceptor to handle auth errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
+    if (error.response && error.response.status === 401) {
+      console.log('Authentication error - redirecting to login');
+      // Clear any stored tokens
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Redirect to login page
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
@@ -63,106 +77,93 @@ export const deleteTask = async (id) => {
 
 // Members
 export const getMembers = async () => {
-  const response = await api.get('/members');
-  return response.data;
+  try {
+    const response = await api.get('/members');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching members:', error);
+    throw error;
+  }
 };
 
 export const getMemberById = async (id) => {
-  const response = await api.get(`/members/${id}`);
-  return response.data;
-};
-
-// Member API functions - Updated to handle null team_id
-
-export const createMember = async (memberData) => {
-  // Create a copy to avoid modifying the original object
-  const cleanedData = { ...memberData };
-  
-  // Remove null or undefined team_id instead of sending it
-  if (cleanedData.team_id === null || cleanedData.team_id === undefined) {
-    delete cleanedData.team_id;
-  } else {
-    // Ensure team_id is an integer if present
-    cleanedData.team_id = parseInt(cleanedData.team_id, 10);
-  }
-  
-  console.log('Creating member with data:', cleanedData);
   try {
-    const response = await api.post('/members', cleanedData);
+    const response = await api.get(`/members/${id}`);
     return response.data;
   } catch (error) {
-    console.error('Create member error:', error.response?.data || error.message);
+    console.error(`Error fetching member ${id}:`, error);
+    throw error;
+  }
+};
+
+export const createMember = async (memberData) => {
+  try {
+    // Explicitly format the data exactly as FastAPI expects it
+    const formattedData = {
+      name: memberData.name,
+      email: memberData.email,
+      role: memberData.role || undefined // Use undefined instead of null or empty string
+    };
+
+    const response = await api.post('/members', formattedData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating member:', error);
+    console.error('Request payload:', memberData);
     throw error;
   }
 };
 
 export const updateMember = async (id, memberData) => {
-  // Create a copy to avoid modifying the original object
-  const cleanedData = { ...memberData };
-  
-  // Remove null or undefined team_id instead of sending it
-  if (cleanedData.team_id === null || cleanedData.team_id === undefined) {
-    delete cleanedData.team_id;
-  } else {
-    // Ensure team_id is an integer if present
-    cleanedData.team_id = parseInt(cleanedData.team_id, 10);
-  }
-  
-  console.log('Updating member with data:', cleanedData);
   try {
-    const response = await api.put(`/members/${id}`, cleanedData);
+    // Explicitly format the data exactly as FastAPI expects it
+    const formattedData = {};
+
+    // Only include properties that are actually provided
+    if (memberData.name !== undefined) formattedData.name = memberData.name;
+    if (memberData.email !== undefined) formattedData.email = memberData.email;
+    if (memberData.role !== undefined) formattedData.role = memberData.role;
+
+    const response = await api.put(`/members/${id}`, formattedData);
     return response.data;
   } catch (error) {
-    console.error('Update member error:', error.response?.data || error.message);
+    console.error(`Error updating member ${id}:`, error);
+    console.error('Request payload:', memberData);
     throw error;
   }
 };
 
 export const deleteMember = async (id) => {
-  const response = await api.delete(`/members/${id}`);
-  return response.data;
-};
-
-// Teams
-export const getTeams = async () => {
-  const response = await api.get('/teams');
-  return response.data;
-};
-
-export const getTeamById = async (id) => {
-  const response = await api.get(`/teams/${id}`);
-  return response.data;
-};
-
-export const createTeam = async (teamData) => {
-  const response = await api.post('/teams', teamData);
-  return response.data;
-};
-
-export const updateTeam = async (id, teamData) => {
-  const response = await api.put(`/teams/${id}`, teamData);
-  return response.data;
-};
-
-export const deleteTeam = async (id) => {
-  const response = await api.delete(`/teams/${id}`);
-  return response.data;
+  try {
+    const response = await api.delete(`/members/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting member ${id}:`, error);
+    throw error;
+  }
 };
 
 // Authentication
 export const login = async (credentials) => {
-  try{
-  const response = await api.post('/auth/login', credentials);
-  const { token, user } = response.data;
+  try {
+    console.log('Attempting login with:', credentials.email);
+    const response = await api.post('/auth/login', credentials);
+    const { token, user } = response.data;
 
-  // Store token in localStorage
-  localStorage.setItem('token', token);
-  localStorage.setItem('user', JSON.stringify(user));
+    console.log('Login successful, storing token and user data');
 
-  return response.data;
-}catch (error) {
-  throw error;
-}
+    // Store token in localStorage
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    return response.data;
+  } catch (error) {
+    console.error('Login error:', error);
+    if (error.response) {
+      console.error('Server response:', error.response.data);
+    }
+    throw error;
+  }
 };
 
 export const register = async (userData) => {

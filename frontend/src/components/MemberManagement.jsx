@@ -6,7 +6,6 @@ import {
   Modal,
   Form,
   Input,
-  Select,
   Popconfirm,
   message
 } from 'antd';
@@ -20,15 +19,11 @@ import {
   getMembers,
   createMember,
   updateMember,
-  deleteMember,
-  getTeams
+  deleteMember
 } from '../services/api';
-
-const { Option } = Select;
 
 const MemberManagement = () => {
   const [members, setMembers] = useState([]);
-  const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
@@ -42,14 +37,10 @@ const MemberManagement = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [membersData, teamsData] = await Promise.all([
-        getMembers(),
-        getTeams()
-      ]);
+      const membersData = await getMembers();
       setMembers(membersData);
-      setTeams(teamsData);
     } catch (error) {
-      message.error('Failed to load data');
+      message.error('Failed to load members');
       console.error(error);
     } finally {
       setLoading(false);
@@ -69,7 +60,6 @@ const MemberManagement = () => {
     form.setFieldsValue({
       name: member.name,
       email: member.email,
-      team_id: member.team_id, // Changed from teamId to team_id to match backend
       role: member.role
     });
     setModalVisible(true);
@@ -83,19 +73,17 @@ const MemberManagement = () => {
     try {
       const values = await form.validateFields();
       
-      // Convert form values to match backend expectations
+      // Format data EXACTLY as the backend schema expects it
       const memberData = {
         name: values.name,
-        email: values.email,
-        role: values.role || '' // Ensure role is at least an empty string
+        email: values.email
       };
-
-      // Only add team_id if it exists and is not null
-      if (values.team_id) {
-        memberData.team_id = parseInt(values.team_id, 10);
+      
+      // Only add role if it has a value, otherwise omit it completely
+      if (values.role && values.role.trim() !== '') {
+        memberData.role = values.role;
       }
 
-      // Log the data we're sending to help with debugging
       console.log('Sending member data:', memberData);
 
       if (editingMemberId) {
@@ -109,18 +97,28 @@ const MemberManagement = () => {
       setModalVisible(false);
       fetchData();
     } catch (error) {
+      console.error('Error details:', error);
+      
       // More detailed error handling
       if (error.response) {
-        // The request was made and the server responded with a status code
-        console.error('Server responded with:', error.response.data);
-        message.error(`Error: ${error.response.data.detail || 'Failed to save member'}`);
+        console.error('Server error response:', error.response.data);
+        
+        // Handle validation errors (422)
+        if (error.response.status === 422 && error.response.data.detail) {
+          const errorDetails = error.response.data.detail;
+          const errorMessages = errorDetails.map(err => {
+            const field = err.loc[err.loc.length - 1];
+            return `${field}: ${err.msg}`;
+          }).join(', ');
+          message.error(`Validation error: ${errorMessages}`);
+        } else {
+          message.error(`Error: ${error.response.data.detail || JSON.stringify(error.response.data)}`);
+        }
       } else if (error.request) {
-        // The request was made but no response was received
         console.error('No response received:', error.request);
         message.error('Server did not respond. Please try again.');
       } else {
-        // Something happened in setting up the request
-        console.error('Error setting up request:', error.message);
+        console.error('Error creating request:', error.message);
         message.error('Error saving member');
       }
     }
@@ -148,12 +146,6 @@ const MemberManagement = () => {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
-    },
-    {
-      title: 'Team',
-      dataIndex: 'team',
-      key: 'team',
-      render: team => team?.name || 'N/A',
     },
     {
       title: 'Role',
@@ -190,7 +182,8 @@ const MemberManagement = () => {
 
   return (
     <div className="member-management">
-      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>Member Management</h2>
         <Button
           type="primary"
           icon={<UserAddOutlined />}
@@ -210,7 +203,7 @@ const MemberManagement = () => {
 
       <Modal
         title={modalTitle}
-        visible={modalVisible}
+        open={modalVisible}
         onCancel={handleModalCancel}
         onOk={handleModalSubmit}
         destroyOnClose
@@ -236,31 +229,6 @@ const MemberManagement = () => {
             ]}
           >
             <Input placeholder="Enter email" />
-          </Form.Item>
-
-          <Form.Item
-            name="team_id"
-            label="Team"
-            rules={[
-              {
-                validator: (_, value) => {
-                  if (value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.resolve(); // Make team_id optional
-                }
-              }
-            ]}
-          >
-            <Select 
-              placeholder="Select team" 
-              allowClear
-              getPopupContainer={triggerNode => triggerNode.parentNode}
-            >
-              {teams.map(team => (
-                <Option key={team.id} value={team.id}>{team.name}</Option>
-              ))}
-            </Select>
           </Form.Item>
 
           <Form.Item
