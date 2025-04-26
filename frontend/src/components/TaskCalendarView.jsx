@@ -1,7 +1,7 @@
-// TaskCalendarView.jsx
+// Fixed TaskCalendarView.jsx
 import React, { useState, useEffect } from 'react';
-import { Calendar, Badge, Select, Spin, message, Typography, Tooltip } from 'antd';
-import { getTasks, getMembers } from '../services/api';
+import { Calendar, Badge, Select, Spin, message, Typography, Tooltip, Empty } from 'antd';
+import { getTasks, getUsers, isAdmin } from '../services/api';
 import moment from 'moment';
 
 const { Option } = Select;
@@ -10,24 +10,28 @@ const { Title } = Typography;
 const TaskCalendarView = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [members, setMembers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [filters, setFilters] = useState({
-    memberId: null
+    assignee_id: null
   });
+  const userIsAdmin = isAdmin();
 
   useEffect(() => {
-    const fetchFiltersData = async () => {
-      try {
-        const membersData = await getMembers();
-        setMembers(membersData);
-      } catch (error) {
-        message.error('Failed to load members data');
-        console.error(error);
-      }
-    };
+    // Only admins need to fetch users for filtering
+    if (userIsAdmin) {
+      const fetchUsersData = async () => {
+        try {
+          const usersData = await getUsers();
+          setUsers(usersData);
+        } catch (error) {
+          message.error('Failed to load users data');
+          console.error(error);
+        }
+      };
 
-    fetchFiltersData();
-  }, []);
+      fetchUsersData();
+    }
+  }, [userIsAdmin]);
 
   useEffect(() => {
     fetchTasks();
@@ -38,12 +42,20 @@ const TaskCalendarView = () => {
       setLoading(true);
       const queryParams = {};
 
-      if (filters.memberId) {
-        queryParams.member_id = filters.memberId;
+      if (filters.assignee_id) {
+        queryParams.assignee_id = filters.assignee_id;
       }
 
       const tasksData = await getTasks(queryParams);
-      setTasks(tasksData);
+
+      // Process tasks to ensure dates are moment objects
+      const processedTasks = tasksData.map(task => ({
+        ...task,
+        start_date: moment(task.start_date),
+        end_date: moment(task.end_date)
+      }));
+
+      setTasks(processedTasks);
     } catch (error) {
       message.error('Failed to load tasks');
       console.error(error);
@@ -59,17 +71,23 @@ const TaskCalendarView = () => {
     }));
   };
 
+  // Fixed method - use moment's comparison methods
   const getTasksForDate = (date) => {
-    const dateStr = date.format('YYYY-MM-DD');
     return tasks.filter(task => {
-      const startDate = moment(task.start_date);
-      const endDate = moment(task.end_date);
-      return date.isSameOrAfter(startDate, 'day') && date.isSameOrBefore(endDate, 'day');
+      // Ensure we're comparing moment objects
+      const cellDate = moment(date.format('YYYY-MM-DD'));
+      const startDate = moment(task.start_date.format('YYYY-MM-DD'));
+      const endDate = moment(task.end_date.format('YYYY-MM-DD'));
+
+      // Use moment's isSameOrAfter and isSameOrBefore methods
+      return cellDate.isSameOrAfter(startDate) && cellDate.isSameOrBefore(endDate);
     });
   };
 
   const dateCellRender = (date) => {
     const tasksForDate = getTasksForDate(date);
+
+    if (tasksForDate.length === 0) return null;
 
     return (
       <ul className="events" style={{ listStyleType: 'none', margin: 0, padding: 0 }}>
@@ -104,22 +122,34 @@ const TaskCalendarView = () => {
     <div className="calendar-view">
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={2}>Task Calendar</Title>
-        <Select
-          allowClear
-          style={{ width: 200 }}
-          placeholder="Filter by Member"
-          onChange={(value) => handleFilterChange('memberId', value)}
-        >
-          {members.map(member => (
-            <Option key={member.id} value={member.id}>{member.name}</Option>
-          ))}
-        </Select>
+        {userIsAdmin && (
+          <Select
+            allowClear
+            style={{ width: 200 }}
+            placeholder="Filter by User"
+            onChange={(value) => handleFilterChange('assignee_id', value)}
+          >
+            {users.map(user => (
+              <Option key={user.id} value={user.id}>{user.name}</Option>
+            ))}
+          </Select>
+        )}
       </div>
 
       <Spin spinning={loading}>
-        <Calendar
-          dateCellRender={dateCellRender}
-        />
+        {tasks.length > 0 ? (
+          <Calendar
+            dateCellRender={dateCellRender}
+          />
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+            <Empty description={
+              userIsAdmin ?
+                "No tasks found. Try creating new tasks first." :
+                "No tasks assigned to you yet."
+            } />
+          </div>
+        )}
       </Spin>
     </div>
   );

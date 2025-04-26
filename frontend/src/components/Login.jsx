@@ -1,4 +1,4 @@
-// Login.jsx
+// Modified Login.jsx
 import React, { useState } from 'react';
 import { Form, Input, Button, Card, Alert, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
@@ -12,36 +12,35 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-// Login.jsx - handleSubmit function modification
-const handleSubmit = async (values) => {
-  try {
-    setLoading(true);
-    setError('');
+  const handleSubmit = async (values) => {
+    try {
+      setLoading(true);
+      setError('');
 
-    console.log('Submitting login form:', values.email);
+      console.log('Submitting login form:', values.email);
 
-    // Call your API
-    await login(values);
+      // Call your API
+      await login(values);
 
-    console.log('Login successful, redirecting to home');
+      console.log('Login successful, redirecting to home');
 
-    // Force a page reload and redirect to home
-    window.location.href = '/';
-  } catch (err) {
-    console.error('Login error:', err);
+      // Force a page reload and redirect to home
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Login error:', err);
 
-    let errorMessage = 'Login failed. Please try again.';
+      let errorMessage = 'Login failed. Please try again.';
 
-    if (err.response && err.response.data) {
-      console.error('Server response:', err.response.data);
-      errorMessage = err.response.data.detail || errorMessage;
+      if (err.response && err.response.data) {
+        console.error('Server response:', err.response.data);
+        errorMessage = err.response.data.detail || errorMessage;
+      }
+
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-
-    setError(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div style={{
@@ -60,7 +59,7 @@ const handleSubmit = async (values) => {
       >
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <Title level={2}>Task Management</Title>
-          <Title level={4}>Admin Login</Title>
+          <Title level={4}>User Login</Title>
         </div>
 
         {error && (
@@ -117,11 +116,8 @@ const handleSubmit = async (values) => {
           </Form.Item>
 
           <div style={{ textAlign: 'center' }}>
-            <p>
-              Don't have an account? <a href="/register">Register now</a>
-            </p>
             <p style={{ marginTop: '12px', fontSize: '12px', color: '#999' }}>
-              Demo credentials: admin@example.com / admin123
+              Contact your administrator to create an account
             </p>
           </div>
         </Form>

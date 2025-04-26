@@ -16,12 +16,17 @@ def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
 
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.User).offset(skip).limit(limit).all()
+
+
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = get_password_hash(user.password)
     db_user = models.User(
         email=user.email,
         name=user.name,
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
+        is_admin=user.is_admin  # Set admin status from the schema
     )
     db.add(db_user)
     db.commit()
@@ -29,92 +34,59 @@ def create_user(db: Session, user: schemas.UserCreate):
     return db_user
 
 
-# Member CRUD operations
-def get_members(db: Session, user_id: int, skip: int = 0, limit: int = 100):
-    return db.query(models.Member).filter(models.Member.user_id == user_id).offset(skip).limit(limit).all()
-
-
-def get_member(db: Session, member_id: int):
-    return db.query(models.Member).filter(models.Member.id == member_id).first()
-
-
-def create_member(db: Session, member: schemas.MemberCreate, user_id: int):
+def update_user(db: Session, user_id: int, user: schemas.UserUpdate):
     try:
-        # Build member data dict for compatibility
-        member_dict = member.dict(exclude_unset=True)
-        member_dict['user_id'] = user_id
-
-        # Print debug info
-        print(f"Creating member with data: {member_dict}")
-
-        db_member = models.Member(**member_dict)
-        db.add(db_member)
-        db.commit()
-        db.refresh(db_member)
-        return db_member
-    except Exception as e:
-        db.rollback()
-        print(f"Error creating member: {e}")
-        raise
-
-
-def update_member(db: Session, member_id: int, member: schemas.MemberUpdate):
-    try:
-        db_member = get_member(db, member_id)
+        db_user = get_user(db, user_id)
 
         # Only include fields that were actually provided (exclude_unset=True)
-        update_data = member.dict(exclude_unset=True)
-        print(f"Updating member with data: {update_data}")
+        update_data = user.dict(exclude_unset=True)
+        print(f"Updating user with data: {update_data}")
 
         for key, value in update_data.items():
-            setattr(db_member, key, value)
+            setattr(db_user, key, value)
 
         db.commit()
-        db.refresh(db_member)
-        return db_member
+        db.refresh(db_user)
+        return db_user
     except Exception as e:
         db.rollback()
-        print(f"Error updating member: {e}")
+        print(f"Error updating user: {e}")
         raise
 
 
-def delete_member(db: Session, member_id: int):
+def delete_user(db: Session, user_id: int):
     try:
-        db_member = get_member(db, member_id)
-        db.delete(db_member)
+        db_user = get_user(db, user_id)
+        db.delete(db_user)
         db.commit()
-        return db_member
+        return db_user
     except Exception as e:
         db.rollback()
-        print(f"Error deleting member: {e}")
+        print(f"Error deleting user: {e}")
         raise
 
 
 # Task CRUD operations
-def get_tasks(
+def get_task(db: Session, task_id: int):
+    return db.query(models.Task).filter(models.Task.id == task_id).first()
+
+
+# For admin users to view all tasks with filtering
+def get_tasks_by_admin(
         db: Session,
-        user_id: int,
         skip: int = 0,
         limit: int = 100,
-        member_id: Optional[int] = None,
+        assignee_id: Optional[int] = None,
         status: Optional[str] = None,
         search: Optional[str] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None
 ):
-    # Get member IDs that belong to the user
-    member_ids = [member.id for member in db.query(models.Member).filter(models.Member.user_id == user_id).all()]
-
-    query = db.query(models.Task).filter(
-        or_(
-            models.Task.creator_id == user_id,
-            models.Task.assignee_id.in_(member_ids)
-        )
-    )
+    query = db.query(models.Task)
 
     # Apply filters
-    if member_id:
-        query = query.filter(models.Task.assignee_id == member_id)
+    if assignee_id:
+        query = query.filter(models.Task.assignee_id == assignee_id)
 
     if status:
         query = query.filter(models.Task.status == status)
@@ -151,37 +123,108 @@ def get_tasks(
     return query.offset(skip).limit(limit).all()
 
 
-def get_task(db: Session, task_id: int):
-    return db.query(models.Task).filter(models.Task.id == task_id).first()
+# For regular users to view only their assigned tasks
+def get_tasks_by_assignee(
+        db: Session,
+        user_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        status: Optional[str] = None,
+        search: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None
+):
+    # Only show tasks assigned to this user
+    query = db.query(models.Task).filter(models.Task.assignee_id == user_id)
+
+    # Apply filters
+    if status:
+        query = query.filter(models.Task.status == status)
+
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                models.Task.title.ilike(search_term),
+                models.Task.description.ilike(search_term)
+            )
+        )
+
+    if start_date and end_date:
+        start = datetime.strptime(start_date, "%Y-%m-%d")
+        end = datetime.strptime(end_date, "%Y-%m-%d")
+        query = query.filter(
+            or_(
+                and_(
+                    models.Task.start_date >= start,
+                    models.Task.start_date <= end
+                ),
+                and_(
+                    models.Task.end_date >= start,
+                    models.Task.end_date <= end
+                ),
+                and_(
+                    models.Task.start_date <= start,
+                    models.Task.end_date >= end
+                )
+            )
+        )
+
+    return query.offset(skip).limit(limit).all()
 
 
 def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
-    db_task = models.Task(**task.dict(), creator_id=user_id)
-    db.add(db_task)
-    db.commit()
-    db.refresh(db_task)
-    return db_task
+    try:
+        db_task = models.Task(**task.dict(), creator_id=user_id)
+        db.add(db_task)
+        db.commit()
+        db.refresh(db_task)
+        return db_task
+    except Exception as e:
+        db.rollback()
+        print(f"Error creating task: {e}")
+        raise
 
 
 def update_task(db: Session, task_id: int, task: schemas.TaskUpdate):
-    db_task = get_task(db, task_id)
-    for key, value in task.dict().items():
-        setattr(db_task, key, value)
-    db.commit()
-    db.refresh(db_task)
-    return db_task
+    try:
+        db_task = get_task(db, task_id)
+
+        # Only update fields that were provided
+        update_data = task.dict(exclude_unset=True)
+
+        for key, value in update_data.items():
+            setattr(db_task, key, value)
+
+        db.commit()
+        db.refresh(db_task)
+        return db_task
+    except Exception as e:
+        db.rollback()
+        print(f"Error updating task: {e}")
+        raise
 
 
 def update_task_status(db: Session, task_id: int, status: str):
-    db_task = get_task(db, task_id)
-    db_task.status = status
-    db.commit()
-    db.refresh(db_task)
-    return db_task
+    try:
+        db_task = get_task(db, task_id)
+        db_task.status = status
+        db.commit()
+        db.refresh(db_task)
+        return db_task
+    except Exception as e:
+        db.rollback()
+        print(f"Error updating task status: {e}")
+        raise
 
 
 def delete_task(db: Session, task_id: int):
-    db_task = get_task(db, task_id)
-    db.delete(db_task)
-    db.commit()
-    return db_task
+    try:
+        db_task = get_task(db, task_id)
+        db.delete(db_task)
+        db.commit()
+        return db_task
+    except Exception as e:
+        db.rollback()
+        print(f"Error deleting task: {e}")
+        raise

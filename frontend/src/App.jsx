@@ -1,4 +1,4 @@
-// App.jsx
+// Modified App.jsx
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
 import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
@@ -16,10 +16,9 @@ import {
 import TaskCalendarView from './components/TaskCalendarView';
 import TaskListView from './components/TaskListView';
 import TaskForm from './components/TaskForm';
-import MemberManagement from './components/MemberManagement';
+import UserManagement from './components/UserManagement';  // Renamed from MemberManagement
 import Login from './components/Login';
-import Register from './components/Register';
-import { logout } from './services/api';
+import { logout, isAdmin } from './services/api';
 
 const { Header, Sider, Content } = Layout;
 
@@ -27,6 +26,7 @@ const App = () => {
   const [collapsed, setCollapsed] = useState(false);
   const isAuthenticated = !!localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userIsAdmin = user.is_admin === true;
 
   const handleLogout = () => {
     logout();
@@ -44,13 +44,12 @@ const App = () => {
     </Menu>
   );
 
-  // If not authenticated, render login/register page
+  // If not authenticated, render login page
   if (!isAuthenticated) {
     return (
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
@@ -77,13 +76,19 @@ const App = () => {
             <Menu.Item key="2" icon={<UnorderedListOutlined />}>
               <Link to="/list">List View</Link>
             </Menu.Item>
-            <Menu.Item key="3" icon={<PlusOutlined />}>
-              <Link to="/create">Create Task</Link>
-            </Menu.Item>
-            <Menu.Divider />
-            <Menu.Item key="4" icon={<UserOutlined />}>
-              <Link to="/members">Members</Link>
-            </Menu.Item>
+
+            {/* Admin-only menu items */}
+            {userIsAdmin && (
+              <>
+                <Menu.Item key="3" icon={<PlusOutlined />}>
+                  <Link to="/create">Create Task</Link>
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Item key="4" icon={<UserOutlined />}>
+                  <Link to="/users">User Management</Link>
+                </Menu.Item>
+              </>
+            )}
           </Menu>
         </Sider>
         <Layout className="site-layout">
@@ -106,7 +111,9 @@ const App = () => {
             <div style={{ marginRight: '16px' }}>
               <Dropdown overlay={userMenu} placement="bottomRight">
                 <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                  <span style={{ marginRight: '8px' }}>{user.name}</span>
+                  <span style={{ marginRight: '8px' }}>
+                    {user.name} {userIsAdmin ? '(Admin)' : ''}
+                  </span>
                   <Avatar icon={<UserOutlined />} />
                 </div>
               </Dropdown>
@@ -124,8 +131,15 @@ const App = () => {
             <Routes>
               <Route path="/" element={<TaskCalendarView />} />
               <Route path="/list" element={<TaskListView />} />
-              <Route path="/create" element={<TaskForm />} />
-              <Route path="/members" element={<MemberManagement />} />
+
+              {/* Admin-only routes */}
+              {userIsAdmin ? (
+                <>
+                  <Route path="/create" element={<TaskForm />} />
+                  <Route path="/users" element={<UserManagement />} />
+                </>
+              ) : null}
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Content>

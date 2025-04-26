@@ -1,4 +1,4 @@
-// MemberManagement.jsx
+// UserManagement.jsx (Replaces MemberManagement.jsx)
 import React, { useState, useEffect } from 'react';
 import {
   Table,
@@ -7,28 +7,31 @@ import {
   Form,
   Input,
   Popconfirm,
-  message
+  message,
+  Switch,
+  Tooltip
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  UserAddOutlined
+  UserAddOutlined,
+  LockOutlined
 } from '@ant-design/icons';
 import {
-  getMembers,
-  createMember,
-  updateMember,
-  deleteMember
+  registerUserByAdmin,
+  getUsers,
+  updateUser,
+  deleteUser
 } from '../services/api';
 
-const MemberManagement = () => {
-  const [members, setMembers] = useState([]);
+const UserManagement = () => {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [form] = Form.useForm();
-  const [editingMemberId, setEditingMemberId] = useState(null);
+  const [editingUserId, setEditingUserId] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -37,10 +40,10 @@ const MemberManagement = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const membersData = await getMembers();
-      setMembers(membersData);
+      const usersData = await getUsers();
+      setUsers(usersData);
     } catch (error) {
-      message.error('Failed to load members');
+      message.error('Failed to load users');
       console.error(error);
     } finally {
       setLoading(false);
@@ -48,19 +51,22 @@ const MemberManagement = () => {
   };
 
   const showCreateModal = () => {
-    setModalTitle('Create New Member');
-    setEditingMemberId(null);
+    setModalTitle('Create New User');
+    setEditingUserId(null);
     form.resetFields();
+    form.setFieldsValue({
+      is_admin: false
+    });
     setModalVisible(true);
   };
 
-  const showEditModal = (member) => {
-    setModalTitle('Edit Member');
-    setEditingMemberId(member.id);
+  const showEditModal = (user) => {
+    setModalTitle('Edit User');
+    setEditingUserId(user.id);
     form.setFieldsValue({
-      name: member.name,
-      email: member.email,
-      role: member.role
+      name: user.name,
+      email: user.email,
+      is_admin: user.is_admin
     });
     setModalVisible(true);
   };
@@ -72,38 +78,38 @@ const MemberManagement = () => {
   const handleModalSubmit = async () => {
     try {
       const values = await form.validateFields();
-      
-      // Format data EXACTLY as the backend schema expects it
-      const memberData = {
-        name: values.name,
-        email: values.email
-      };
-      
-      // Only add role if it has a value, otherwise omit it completely
-      if (values.role && values.role.trim() !== '') {
-        memberData.role = values.role;
-      }
 
-      console.log('Sending member data:', memberData);
+      if (editingUserId) {
+        // When editing, we don't update password
+        const userData = {
+          name: values.name,
+          email: values.email,
+          is_admin: values.is_admin
+        };
 
-      if (editingMemberId) {
-        await updateMember(editingMemberId, memberData);
-        message.success('Member updated successfully');
+        await updateUser(editingUserId, userData);
+        message.success('User updated successfully');
       } else {
-        await createMember(memberData);
-        message.success('Member created successfully');
+        // For new users, include password
+        const userData = {
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          is_admin: values.is_admin
+        };
+
+        await registerUserByAdmin(userData);
+        message.success('User created successfully');
       }
 
       setModalVisible(false);
       fetchData();
     } catch (error) {
       console.error('Error details:', error);
-      
-      // More detailed error handling
+
       if (error.response) {
         console.error('Server error response:', error.response.data);
-        
-        // Handle validation errors (422)
+
         if (error.response.status === 422 && error.response.data.detail) {
           const errorDetails = error.response.data.detail;
           const errorMessages = errorDetails.map(err => {
@@ -115,22 +121,20 @@ const MemberManagement = () => {
           message.error(`Error: ${error.response.data.detail || JSON.stringify(error.response.data)}`);
         }
       } else if (error.request) {
-        console.error('No response received:', error.request);
         message.error('Server did not respond. Please try again.');
       } else {
-        console.error('Error creating request:', error.message);
-        message.error('Error saving member');
+        message.error('Error saving user');
       }
     }
   };
 
-  const handleDelete = async (memberId) => {
+  const handleDelete = async (userId) => {
     try {
-      await deleteMember(memberId);
-      message.success('Member deleted successfully');
+      await deleteUser(userId);
+      message.success('User deleted successfully');
       fetchData();
     } catch (error) {
-      message.error('Error deleting member');
+      message.error('Error deleting user');
       console.error(error);
     }
   };
@@ -148,9 +152,12 @@ const MemberManagement = () => {
       key: 'email',
     },
     {
-      title: 'Role',
-      dataIndex: 'role',
-      key: 'role',
+      title: 'Admin',
+      dataIndex: 'is_admin',
+      key: 'is_admin',
+      render: (isAdmin) => (
+        isAdmin ? 'Yes' : 'No'
+      ),
     },
     {
       title: 'Actions',
@@ -164,7 +171,7 @@ const MemberManagement = () => {
             style={{ marginRight: '8px' }}
           />
           <Popconfirm
-            title="Are you sure you want to delete this member?"
+            title="Are you sure you want to delete this user?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
@@ -181,21 +188,21 @@ const MemberManagement = () => {
   ];
 
   return (
-    <div className="member-management">
+    <div className="user-management">
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Member Management</h2>
+        <h2>User Management</h2>
         <Button
           type="primary"
           icon={<UserAddOutlined />}
           onClick={showCreateModal}
         >
-          Add Member
+          Add User
         </Button>
       </div>
 
       <Table
         columns={columns}
-        dataSource={members}
+        dataSource={users}
         rowKey="id"
         loading={loading}
         pagination={{ pageSize: 10 }}
@@ -231,12 +238,28 @@ const MemberManagement = () => {
             <Input placeholder="Enter email" />
           </Form.Item>
 
+          {!editingUserId && (
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[
+                { required: true, message: 'Please enter password' },
+                { min: 6, message: 'Password must be at least 6 characters' }
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Enter password"
+              />
+            </Form.Item>
+          )}
+
           <Form.Item
-            name="role"
-            label="Role"
-            rules={[{ required: false }]}
+            name="is_admin"
+            label="Admin Access"
+            valuePropName="checked"
           >
-            <Input placeholder="Enter role" />
+            <Switch />
           </Form.Item>
         </Form>
       </Modal>
@@ -244,4 +267,4 @@ const MemberManagement = () => {
   );
 };
 
-export default MemberManagement;
+export default UserManagement;

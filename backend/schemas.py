@@ -13,6 +13,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    is_admin: Optional[bool] = False
 
 
 class UserLogin(BaseModel):
@@ -20,41 +21,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    is_admin: Optional[bool] = None
+
+
 class User(UserBase):
     id: int
     is_active: bool
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
-
-
-# Member schemas
-class MemberBase(BaseModel):
-    name: str
-    email: EmailStr
-    role: Optional[str] = None
-
-
-class MemberCreate(BaseModel):
-    name: str
-    email: EmailStr
-    role: Optional[str] = None
-
-
-class MemberUpdate(BaseModel):
-    name: Optional[str] = None
-    email: Optional[EmailStr] = None
-    role: Optional[str] = None
-
-
-class Member(BaseModel):
-    id: int
-    name: str
-    email: EmailStr
-    role: Optional[str] = None
-    user_id: int
+    is_admin: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -77,8 +53,14 @@ class TaskCreate(TaskBase):
     pass
 
 
-class TaskUpdate(TaskBase):
-    pass
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[TaskStatus] = None
+    priority: Optional[TaskPriority] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    assignee_id: Optional[int] = None
 
 
 class TaskStatusUpdate(BaseModel):
@@ -90,7 +72,7 @@ class Task(TaskBase):
     creator_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    assignee: Member
+    assignee: User
 
     class Config:
         orm_mode = True

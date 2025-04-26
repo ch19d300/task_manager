@@ -1,7 +1,7 @@
-// TaskForm.jsx
+// Modified TaskForm.jsx
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Input, DatePicker, Select, message } from 'antd';
-import { createTask, getMembers } from '../services/api';
+import { createTask, getUsers } from '../services/api';
 import moment from 'moment';
 
 const { TextArea } = Input;
@@ -11,16 +11,15 @@ const { RangePicker } = DatePicker;
 const TaskForm = ({ onTaskCreated }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [members, setMembers] = useState([]);
-  const [showMemberForm, setShowMemberForm] = useState(false);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const membersData = await getMembers();
-        setMembers(membersData);
+        const usersData = await getUsers();
+        setUsers(usersData);
       } catch (error) {
-        message.error('Failed to load members');
+        message.error('Failed to load users');
         console.error(error);
       }
     };
@@ -91,21 +90,21 @@ const TaskForm = ({ onTaskCreated }) => {
         <Form.Item
           name="assignee_id"
           label="Assign To"
-          rules={[{ required: true, message: 'Please select a member to assign this task' }]}
+          rules={[{ required: true, message: 'Please select a user to assign this task' }]}
         >
           <Select
-            placeholder="Select member"
+            placeholder="Select user"
             style={{ width: '100%' }}
             notFoundContent={
-              members.length === 0 ?
+              users.length === 0 ?
                 <div style={{ padding: '8px 0' }}>
-                  No members available. Please create members first.
+                  No users available. Please create users first.
                 </div> : null
             }
           >
-            {members.map(member => (
-              <Option key={member.id} value={member.id}>
-                {member.name} {member.role ? `(${member.role})` : ''}
+            {users.map(user => (
+              <Option key={user.id} value={user.id}>
+                {user.name} {user.is_admin ? '(Admin)' : ''}
               </Option>
             ))}
           </Select>
