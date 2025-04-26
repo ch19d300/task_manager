@@ -46,7 +46,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 
-@app.post("/api/auth/login", response_model=schemas.Token)
+@app.post("/api/auth/login")
 def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
     user = crud.get_user_by_email(db, email=user_credentials.email)
     if not user or not verify_password(user_credentials.password, user.hashed_password):

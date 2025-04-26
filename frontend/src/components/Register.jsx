@@ -1,8 +1,9 @@
 // Register.jsx
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Alert, Typography } from 'antd';
+import { Form, Input, Button, Card, Alert, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
+import { register } from '../services/api'; // Import the register function
 
 const { Title } = Typography;
 
@@ -16,21 +17,26 @@ const Register = () => {
       setLoading(true);
       setError('');
       
-      // For demo, just simulate a successful registration
-      console.log('Registration values:', values);
+      // Create a user object with the required fields
+      const userData = {
+        name: values.name,
+        email: values.email,
+        password: values.password
+      };
       
-      // Show success and redirect to login
-      setTimeout(() => {
-        setLoading(false);
-        navigate('/login');
-      }, 1500);
+      // Call the API to register the user
+      await register(userData);
       
-      // In a real app, you would call your API:
-      // await register(values);
+      // Show success message
+      message.success('Registration successful! Please log in.');
+      
+      // Redirect to login page
+      navigate('/login');
       
     } catch (err) {
       setError(err.response?.data?.detail || 'Registration failed. Please try again.');
       console.error('Registration error:', err);
+    } finally {
       setLoading(false);
     }
   };

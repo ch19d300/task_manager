@@ -69,7 +69,7 @@ const MemberManagement = () => {
     form.setFieldsValue({
       name: member.name,
       email: member.email,
-      teamId: member.teamId,
+      team_id: member.team_id, // Changed from teamId to team_id to match backend
       role: member.role
     });
     setModalVisible(true);
@@ -82,20 +82,47 @@ const MemberManagement = () => {
   const handleModalSubmit = async () => {
     try {
       const values = await form.validateFields();
+      
+      // Convert form values to match backend expectations
+      const memberData = {
+        name: values.name,
+        email: values.email,
+        role: values.role || '' // Ensure role is at least an empty string
+      };
+
+      // Only add team_id if it exists and is not null
+      if (values.team_id) {
+        memberData.team_id = parseInt(values.team_id, 10);
+      }
+
+      // Log the data we're sending to help with debugging
+      console.log('Sending member data:', memberData);
 
       if (editingMemberId) {
-        await updateMember(editingMemberId, values);
+        await updateMember(editingMemberId, memberData);
         message.success('Member updated successfully');
       } else {
-        await createMember(values);
+        await createMember(memberData);
         message.success('Member created successfully');
       }
 
       setModalVisible(false);
       fetchData();
     } catch (error) {
-      message.error('Error saving member');
-      console.error(error);
+      // More detailed error handling
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        console.error('Server responded with:', error.response.data);
+        message.error(`Error: ${error.response.data.detail || 'Failed to save member'}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+        message.error('Server did not respond. Please try again.');
+      } else {
+        // Something happened in setting up the request
+        console.error('Error setting up request:', error.message);
+        message.error('Error saving member');
+      }
     }
   };
 
@@ -212,10 +239,24 @@ const MemberManagement = () => {
           </Form.Item>
 
           <Form.Item
-            name="teamId"
+            name="team_id"
             label="Team"
+            rules={[
+              {
+                validator: (_, value) => {
+                  if (value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.resolve(); // Make team_id optional
+                }
+              }
+            ]}
           >
-            <Select placeholder="Select team" allowClear>
+            <Select 
+              placeholder="Select team" 
+              allowClear
+              getPopupContainer={triggerNode => triggerNode.parentNode}
+            >
               {teams.map(team => (
                 <Option key={team.id} value={team.id}>{team.name}</Option>
               ))}
@@ -225,6 +266,7 @@ const MemberManagement = () => {
           <Form.Item
             name="role"
             label="Role"
+            rules={[{ required: false }]}
           >
             <Input placeholder="Enter role" />
           </Form.Item>

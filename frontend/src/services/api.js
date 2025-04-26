@@ -1,9 +1,9 @@
-// services/api.js
+// services/api.js - Fixed version
 import axios from 'axios';
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -19,6 +19,15 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
 );
 
 // Tasks
@@ -63,14 +72,50 @@ export const getMemberById = async (id) => {
   return response.data;
 };
 
+// Member API functions - Updated to handle null team_id
+
 export const createMember = async (memberData) => {
-  const response = await api.post('/members', memberData);
-  return response.data;
+  // Create a copy to avoid modifying the original object
+  const cleanedData = { ...memberData };
+  
+  // Remove null or undefined team_id instead of sending it
+  if (cleanedData.team_id === null || cleanedData.team_id === undefined) {
+    delete cleanedData.team_id;
+  } else {
+    // Ensure team_id is an integer if present
+    cleanedData.team_id = parseInt(cleanedData.team_id, 10);
+  }
+  
+  console.log('Creating member with data:', cleanedData);
+  try {
+    const response = await api.post('/members', cleanedData);
+    return response.data;
+  } catch (error) {
+    console.error('Create member error:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 export const updateMember = async (id, memberData) => {
-  const response = await api.put(`/members/${id}`, memberData);
-  return response.data;
+  // Create a copy to avoid modifying the original object
+  const cleanedData = { ...memberData };
+  
+  // Remove null or undefined team_id instead of sending it
+  if (cleanedData.team_id === null || cleanedData.team_id === undefined) {
+    delete cleanedData.team_id;
+  } else {
+    // Ensure team_id is an integer if present
+    cleanedData.team_id = parseInt(cleanedData.team_id, 10);
+  }
+  
+  console.log('Updating member with data:', cleanedData);
+  try {
+    const response = await api.put(`/members/${id}`, cleanedData);
+    return response.data;
+  } catch (error) {
+    console.error('Update member error:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 export const deleteMember = async (id) => {
@@ -121,8 +166,14 @@ export const login = async (credentials) => {
 };
 
 export const register = async (userData) => {
-  const response = await api.post('/auth/register', userData);
-  return response.data;
+  try {
+    // Use the correct endpoint path without api/ prefix since it's already in the baseURL
+    const response = await api.post('/auth/register', userData);
+    return response.data;
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
+  }
 };
 
 export const logout = () => {

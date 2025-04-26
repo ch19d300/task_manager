@@ -12,36 +12,24 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (values) => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      // For development/demo purposes, accept admin/admin123
-      // In production, you'd connect this to your backend API
-      if (values.email === 'admin@example.com' && values.password === 'admin123') {
-        // Simulate successful login
-        localStorage.setItem('token', 'demo-token');
-        localStorage.setItem('user', JSON.stringify({
-          id: 1,
-          name: 'Admin User',
-          email: 'admin@example.com'
-        }));
-        
-        // Redirect to home page
-        navigate('/');
-      } else {
-        // Later replace with actual API call:
-        // await login(values);
-        setError('Invalid email or password');
-      }
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed. Please try again.');
-      console.error('Login error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+// Login.jsx - handleSubmit function modification
+const handleSubmit = async (values) => {
+  try {
+    setLoading(true);
+    setError('');
+
+    // Call your API
+    await login(values);
+
+    // Force a page reload and redirect to home
+    window.location.href = '/';
+  } catch (err) {
+    setError(err.response?.data?.detail || 'Login failed. Please try again.');
+    console.error('Login error:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div style={{ 

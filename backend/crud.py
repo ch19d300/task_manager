@@ -16,17 +16,17 @@ def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
 
-# def create_user(db: Session, user: schemas.UserCreate):
-#     hashed_password = get_password_hash(user.password)
-#     db_user = models.User(
-#         email=user.email,
-#         name=user.name,
-#         hashed_password=hashed_password
-#     )
-#     db.add(db_user)
-#     db.commit()
-#     db.refresh(db_user)
-#     return db_user
+def create_user(db: Session, user: schemas.UserCreate):
+    hashed_password = get_password_hash(user.password)
+    db_user = models.User(
+        email=user.email,
+        name=user.name,
+        hashed_password=hashed_password
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
 
 # Team CRUD operations
@@ -38,21 +38,21 @@ def get_team(db: Session, team_id: int):
     return db.query(models.Team).filter(models.Team.id == team_id).first()
 
 
-# def create_team(db: Session, team: schemas.TeamCreate):
-#     db_team = models.Team(**team.dict())
-#     db.add(db_team)
-#     db.commit()
-#     db.refresh(db_team)
-#     return db_team
+def create_team(db: Session, team: schemas.TeamCreate):
+    db_team = models.Team(**team.dict())
+    db.add(db_team)
+    db.commit()
+    db.refresh(db_team)
+    return db_team
 
 
-# def update_team(db: Session, team_id: int, team: schemas.TeamUpdate):
-#     db_team = get_team(db, team_id)
-#     for key, value in team.dict().items():
-#         setattr(db_team, key, value)
-#     db.commit()
-#     db.refresh(db_team)
-#     return db_team
+def update_team(db: Session, team_id: int, team: schemas.TeamUpdate):
+    db_team = get_team(db, team_id)
+    for key, value in team.dict().items():
+        setattr(db_team, key, value)
+    db.commit()
+    db.refresh(db_team)
+    return db_team
 
 
 def delete_team(db: Session, team_id: int):
@@ -79,13 +79,13 @@ def create_member(db: Session, member: schemas.MemberCreate):
     return db_member
 
 
-# def update_member(db: Session, member_id: int, member: schemas.MemberUpdate):
-#     db_member = get_member(db, member_id)
-#     for key, value in member.dict().items():
-#         setattr(db_member, key, value)
-#     db.commit()
-#     db.refresh(db_member)
-#     return db_member
+def update_member(db: Session, member_id: int, member: schemas.MemberUpdate):
+    db_member = get_member(db, member_id)
+    for key, value in member.dict().items():
+        setattr(db_member, key, value)
+    db.commit()
+    db.refresh(db_member)
+    return db_member
 
 
 def delete_member(db: Session, member_id: int):
@@ -155,21 +155,21 @@ def get_task(db: Session, task_id: int):
     return db.query(models.Task).filter(models.Task.id == task_id).first()
 
 
-# def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
-#     db_task = models.Task(**task.dict(), creator_id=user_id)
-#     db.add(db_task)
-#     db.commit()
-#     db.refresh(db_task)
-#     return db_task
+def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
+    db_task = models.Task(**task.dict(), creator_id=user_id)
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    return db_task
 
 
-# def update_task(db: Session, task_id: int, task: schemas.TaskUpdate):
-#     db_task = get_task(db, task_id)
-#     for key, value in task.dict().items():
-#         setattr(db_task, key, value)
-#     db.commit()
-#     db.refresh(db_task)
-#     return db_task
+def update_task(db: Session, task_id: int, task: schemas.TaskUpdate):
+    db_task = get_task(db, task_id)
+    for key, value in task.dict().items():
+        setattr(db_task, key, value)
+    db.commit()
+    db.refresh(db_task)
+    return db_task
 
 
 def update_task_status(db: Session, task_id: int, status: str):
