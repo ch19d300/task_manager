@@ -1,7 +1,15 @@
-// Modified App.jsx
+// Fixed App.jsx Header Component
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
-import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
+import {
+  Layout,
+  Menu,
+  Button,
+  Avatar,
+  Dropdown,
+  ConfigProvider,
+  theme
+} from 'antd';
 import {
   CalendarOutlined,
   UnorderedListOutlined,
@@ -9,16 +17,24 @@ import {
   PlusOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
-  MenuUnfoldOutlined
+  MenuUnfoldOutlined,
+  DashboardOutlined,
+  SettingOutlined
 } from '@ant-design/icons';
 
 // Import components
 import TaskCalendarView from './components/TaskCalendarView';
 import TaskListView from './components/TaskListView';
 import TaskForm from './components/TaskForm';
-import UserManagement from './components/UserManagement';  // Renamed from MemberManagement
+import UserManagement from './components/UserManagement';
 import Login from './components/Login';
 import { logout, isAdmin } from './services/api';
+
+// Import CSS
+import './theme/dark-theme.css';
+import './theme/animations.css';
+import './theme/taskmaster-styles.css';
+import './theme/theme-header.css';
 
 const { Header, Sider, Content } = Layout;
 
@@ -30,14 +46,29 @@ const App = () => {
 
   const handleLogout = () => {
     logout();
-    window.location.href = '/login';
+  };
+
+  // Create initials for avatar
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   const userMenu = (
-    <Menu>
-      <Menu.Item key="profile" icon={<UserOutlined />}>
-        Profile
+    <Menu className="user-dropdown-menu">
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '8px' }}>
+        <div style={{ fontSize: '16px', fontWeight: 500, marginBottom: '4px' }}>{user.name}</div>
+        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>{user.email}</div>
+      </div>
+      <Menu.Item key="settings" icon={<SettingOutlined />}>
+        Settings
       </Menu.Item>
+      <Menu.Divider />
       <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
         Logout
       </Menu.Item>
@@ -47,105 +78,174 @@ const App = () => {
   // If not authenticated, render login page
   if (!isAuthenticated) {
     return (
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          token: {
+            colorPrimary: '#9333EA',
+            borderRadius: 12,
+          },
+        }}
+      >
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Router>
+      </ConfigProvider>
     );
   }
 
   return (
-    <Router>
-      <Layout style={{ minHeight: '100vh' }}>
-        <Sider trigger={null} collapsible collapsed={collapsed} width={240}>
-          <div className="logo" style={{ height: '64px', padding: '16px', textAlign: 'center' }}>
-            <h1 style={{ color: 'white', margin: 0, fontSize: collapsed ? '16px' : '20px' }}>
-              {collapsed ? 'TM' : 'Task Manager'}
-            </h1>
-          </div>
-          <Menu
-            theme="dark"
-            mode="inline"
-            defaultSelectedKeys={['1']}
-          >
-            <Menu.Item key="1" icon={<CalendarOutlined />}>
-              <Link to="/">Calendar View</Link>
-            </Menu.Item>
-            <Menu.Item key="2" icon={<UnorderedListOutlined />}>
-              <Link to="/list">List View</Link>
-            </Menu.Item>
-
-            {/* Admin-only menu items */}
-            {userIsAdmin && (
-              <>
-                <Menu.Item key="3" icon={<PlusOutlined />}>
-                  <Link to="/create">Create Task</Link>
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Item key="4" icon={<UserOutlined />}>
-                  <Link to="/users">User Management</Link>
-                </Menu.Item>
-              </>
-            )}
-          </Menu>
-        </Sider>
-        <Layout className="site-layout">
-          <Header
-            className="site-layout-background"
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: {
+          colorPrimary: '#9333EA',
+          borderRadius: 12,
+        },
+      }}
+    >
+      <Router>
+        <Layout
+          style={{
+            minHeight: '100vh',
+            background: '#0A0A0A'
+          }}
+        >
+          <Sider
+            trigger={null}
+            collapsible
+            collapsed={collapsed}
+            width={280}
+            className="app-sider"
             style={{
-              padding: 0,
-              background: '#fff',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
+              overflow: 'auto',
+              position: 'fixed',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              zIndex: 10
             }}
           >
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
-              style={{ fontSize: '16px', marginLeft: '16px' }}
-            />
-            <div style={{ marginRight: '16px' }}>
-              <Dropdown overlay={userMenu} placement="bottomRight">
-                <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                  <span style={{ marginRight: '8px' }}>
-                    {user.name} {userIsAdmin ? '(Admin)' : ''}
-                  </span>
-                  <Avatar icon={<UserOutlined />} />
-                </div>
-              </Dropdown>
+            <div className="logo" style={{ height: '72px', padding: '16px', textAlign: 'center' }}>
+              {collapsed ? (
+                <DashboardOutlined className="gradient-text" style={{ fontSize: '28px' }} />
+              ) : (
+                <h1 className="gradient-text" style={{ margin: 0, fontSize: '24px' }}>
+                  TaskMaster
+                </h1>
+              )}
             </div>
-          </Header>
-          <Content
-            style={{
-              margin: '24px 16px',
-              padding: 24,
-              background: '#fff',
-              minHeight: 280,
-              overflow: 'auto'
-            }}
-          >
-            <Routes>
-              <Route path="/" element={<TaskCalendarView />} />
-              <Route path="/list" element={<TaskListView />} />
 
-              {/* Admin-only routes */}
-              {userIsAdmin ? (
+            <Menu
+              theme="dark"
+              mode="inline"
+              defaultSelectedKeys={['1']}
+              className="app-menu"
+              style={{ background: 'transparent', border: 'none', padding: '0 12px' }}
+            >
+              <Menu.Item key="1" icon={<CalendarOutlined />} className="menu-item">
+                <Link to="/">Calendar View</Link>
+              </Menu.Item>
+              <Menu.Item key="2" icon={<UnorderedListOutlined />} className="menu-item">
+                <Link to="/list">List View</Link>
+              </Menu.Item>
+
+              {userIsAdmin && (
                 <>
-                  <Route path="/create" element={<TaskForm />} />
-                  <Route path="/users" element={<UserManagement />} />
+                  <Menu.Item key="3" icon={<PlusOutlined />} className="menu-item">
+                    <Link to="/create">Create Task</Link>
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Item key="4" icon={<UserOutlined />} className="menu-item">
+                    <Link to="/users">User Management</Link>
+                  </Menu.Item>
                 </>
-              ) : null}
+              )}
+            </Menu>
+          </Sider>
 
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Content>
+          <Layout style={{
+            marginLeft: collapsed ? 80 : 280,
+            transition: 'margin-left 0.3s cubic-bezier(0.2, 0, 0, 1)'
+          }}>
+            <Header
+              className="site-header"
+              style={{
+                padding: '0 24px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                position: 'sticky',
+                top: 0,
+                zIndex: 9,
+                height: '64px'
+              }}
+            >
+              <Button
+                type="text"
+                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                onClick={() => setCollapsed(!collapsed)}
+                className="trigger-button"
+                style={{ fontSize: '18px' }}
+              />
+
+              <div style={{ marginLeft: 'auto' }}>
+                <Dropdown overlay={userMenu} placement="bottomRight" trigger={['click']}>
+                  <Button
+                    type="text"
+                    style={{
+                      height: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '0 8px',
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.03)'
+                    }}
+                  >
+                    <Avatar
+                      className="user-avatar"
+                      style={{
+                        marginRight: '8px'
+                      }}
+                    >
+                      {getInitials(user.name)}
+                    </Avatar>
+                    <span style={{ fontSize: '14px' }}>
+                      {userIsAdmin ? 'Admin' : 'User'}
+                    </span>
+                  </Button>
+                </Dropdown>
+              </div>
+            </Header>
+
+            <Content
+              className="site-content"
+              style={{
+                minHeight: 'calc(100vh - 64px)'
+              }}
+            >
+              <Routes>
+                <Route path="/" element={<TaskCalendarView />} />
+                <Route path="/list" element={<TaskListView />} />
+
+                {/* Admin-only routes */}
+                {userIsAdmin ? (
+                  <>
+                    <Route path="/create" element={<TaskForm />} />
+                    <Route path="/users" element={<UserManagement />} />
+                  </>
+                ) : null}
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Content>
+          </Layout>
         </Layout>
-      </Layout>
-    </Router>
+      </Router>
+    </ConfigProvider>
   );
 };
 

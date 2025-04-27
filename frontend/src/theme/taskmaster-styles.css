@@ -1,0 +1,793 @@
+/* Complete Fixed CSS for TaskMaster Application */
+
+/* ===== Base Styles ===== */
+body {
+  background-color: #0A0A0A;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* ===== Layout Components ===== */
+.app-sider {
+  background: linear-gradient(180deg, #121212 0%, #1A1A1A 100%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.site-header {
+  background: rgba(10, 10, 10, 0.8) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  height: 72px;
+  z-index: 9;
+}
+
+.site-content {
+  background: #0A0A0A !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 32px !important;
+  min-height: calc(100vh - 72px);
+}
+
+/* ===== Menu Styling ===== */
+.ant-menu {
+  background: transparent !important;
+  border: none !important;
+}
+
+.ant-menu-item {
+  margin: 8px 0 !important;
+  height: 48px !important;
+  line-height: 48px !important;
+  border-radius: 12px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-menu-item-selected {
+  background: linear-gradient(120deg, #9333EA 0%, #4F46E5 100%) !important;
+  box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+}
+
+.ant-menu-item:hover:not(.ant-menu-item-selected) {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.ant-menu-item a {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.ant-menu-item-selected a {
+  color: white !important;
+}
+
+/* ===== Logo ===== */
+.logo {
+  height: 80px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(45deg, #9333EA, #4F46E5, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientFlow 8s ease infinite;
+}
+
+/* ===== Typography ===== */
+h1, h2, h3, h4, h5 {
+  font-weight: 700 !important;
+  letter-spacing: -0.5px;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.ant-typography {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.ant-typography.ant-typography-secondary {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* ===== Card Styling ===== */
+.ant-card {
+  background: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.03) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 16px 24px !important;
+}
+
+.ant-card-body {
+  padding: 24px !important;
+}
+
+/* Task Card Specific Styling */
+.task-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px !important;
+  background: #1e1e1e !important;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.task-card .ant-card-body {
+  padding: 16px !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.task-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Card Layout Components */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.card-content {
+  flex: 1;
+  margin-bottom: 16px;
+}
+
+.card-meta {
+  margin-bottom: 16px;
+}
+
+.card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.card-meta-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 12px;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* ===== Button Styling ===== */
+.ant-btn {
+  border-radius: 12px !important;
+  height: 40px !important;
+  padding: 0 16px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: none !important;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(120deg, #9333EA 0%, #4F46E5 100%) !important;
+  box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3) !important;
+}
+
+.ant-btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.5) !important;
+}
+
+.ant-btn-default {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.ant-btn-default:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.ant-btn-dangerous {
+  background: linear-gradient(120deg, #DC2626 0%, #991B1B 100%) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.2) !important;
+}
+
+.ant-btn-text {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.ant-btn-text:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.ant-btn-icon-only {
+  width: 40px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ant-btn-circle {
+  border-radius: 50% !important;
+}
+
+/* Special button for creating new task */
+.new-task-btn {
+  height: 44px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* ===== Form Elements ===== */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-picker,
+.ant-select-selector {
+  background-color: rgba(20, 20, 20, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 12px !important;
+  height: 40px !important;
+  padding: 4px 12px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-input-affix-wrapper {
+  padding: 0 12px !important;
+}
+
+.ant-input-affix-wrapper input.ant-input {
+  background: transparent !important;
+  border: none !important;
+  height: 38px !important;
+  padding: 0 8px 0 0 !important;
+}
+
+.ant-input-affix-wrapper .ant-input-prefix {
+  color: rgba(255, 255, 255, 0.3);
+  margin-right: 8px;
+}
+
+.ant-input:hover,
+.ant-input-affix-wrapper:hover,
+.ant-picker:hover,
+.ant-select-selector:hover {
+  border-color: rgba(147, 51, 234, 0.5) !important;
+}
+
+.ant-input:focus,
+.ant-input-affix-wrapper-focused,
+.ant-picker-focused,
+.ant-select-focused .ant-select-selector {
+  border-color: #9333EA !important;
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2) !important;
+}
+
+.ant-select-single .ant-select-selector {
+  height: 40px !important;
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.ant-select-single .ant-select-selection-item {
+  line-height: 38px !important;
+}
+
+.ant-select-dropdown {
+  background-color: #181818 !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+.ant-select-item {
+  border-radius: 8px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  padding: 8px 12px !important;
+  transition: all 0.3s !important;
+}
+
+.ant-select-item-option-selected {
+  background-color: rgba(147, 51, 234, 0.2) !important;
+  color: #9333EA !important;
+}
+
+.ant-select-item-option-active {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Date Range Picker */
+.ant-picker {
+  width: 100%;
+}
+
+.ant-picker-range {
+  width: 100%;
+}
+
+.ant-picker-range .ant-picker-input {
+  width: 50% !important;
+}
+
+.ant-picker-dropdown {
+  background-color: #181818 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+.ant-picker-panel-container {
+  background-color: #181818 !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.ant-picker-cell-in-view {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.ant-picker-cell-selected .ant-picker-cell-inner {
+  background: #9333EA !important;
+}
+
+/* ===== Segmented Controls ===== */
+.ant-segmented {
+  background: rgba(0, 0, 0, 0.2) !important;
+  padding: 4px !important;
+  border-radius: 12px !important;
+}
+
+.ant-segmented-item {
+  transition: all 0.3s !important;
+  border-radius: 8px !important;
+}
+
+.ant-segmented-item-selected {
+  background: #9333EA !important;
+}
+
+.ant-segmented-item:hover:not(.ant-segmented-item-selected) {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.ant-segmented-thumb {
+  background: #9333EA !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3) !important;
+}
+
+/* ===== Dropdowns ===== */
+.ant-dropdown-menu {
+  background: #181818 !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
+}
+
+.ant-dropdown-menu-item {
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  margin: 4px 0 !important;
+  transition: all 0.3s !important;
+}
+
+.ant-dropdown-menu-item:hover {
+  background: rgba(147, 51, 234, 0.1) !important;
+}
+
+/* ===== Table Styling ===== */
+.ant-table {
+  background: transparent !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+.ant-table-container {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  background: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.ant-table-thead > tr > th {
+  background: rgba(20, 20, 20, 0.8) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  padding: 16px 24px !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.ant-table-tbody > tr > td {
+  padding: 16px 24px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+  transition: all 0.3s !important;
+  vertical-align: middle !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(147, 51, 234, 0.05) !important;
+}
+
+/* ===== Avatar Styling ===== */
+.ant-avatar {
+  background: #9333EA;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== Calendar Styling ===== */
+.ant-picker-calendar {
+  background: #141414 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.ant-picker-calendar-header {
+  padding: 16px 24px !important;
+  background: rgba(20, 20, 20, 0.8) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Calendar Table */
+.ant-picker-content th {
+  padding: 12px !important;
+  text-align: center !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-weight: 600 !important;
+  background: #1A1A1A !important;
+  border-bottom: 1px solid #333 !important;
+}
+
+.ant-picker-calendar .ant-picker-content > tbody > tr {
+  height: 110px;
+}
+
+.ant-picker-cell {
+  padding: 0 !important;
+  position: relative !important;
+}
+
+.ant-picker-cell-in-view {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.ant-picker-calendar-date {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  min-height: 100px !important;
+  height: auto !important;
+}
+
+.ant-picker-calendar-date-content {
+  height: 100% !important;
+  padding: 0 !important;
+}
+
+/* Task Items in Calendar */
+.calendar-task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(20, 20, 20, 0.7);
+  margin-bottom: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-task-item:hover {
+  background: rgba(147, 51, 234, 0.1);
+  border-color: rgba(147, 51, 234, 0.2);
+  transform: translateY(-1px);
+}
+
+.calendar-task-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+/* "More tasks" indicator */
+.calendar-more-tasks {
+  text-align: center;
+  font-size: 11px;
+  background: rgba(147, 51, 234, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== Tags & Badges ===== */
+.ant-tag {
+  border-radius: 20px !important;
+  padding: 4px 12px !important;
+  font-weight: 500 !important;
+  border: none !important;
+}
+
+/* Priority Tags */
+.priority-high {
+  background: linear-gradient(45deg, #DC2626, #991B1B) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.priority-medium {
+  background: linear-gradient(45deg, #F59E0B, #B45309) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.priority-low {
+  background: linear-gradient(45deg, #10B981, #047857) !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* Status styling */
+.status-pending {
+  background: linear-gradient(45deg, #6B7280, #374151) !important;
+  color: white !important;
+}
+
+.status-in-progress {
+  background: linear-gradient(45deg, #3B82F6, #1E40AF) !important;
+  color: white !important;
+}
+
+.status-completed {
+  background: linear-gradient(45deg, #10B981, #047857) !important;
+  color: white !important;
+}
+
+.status-overdue {
+  background: linear-gradient(45deg, #DC2626, #7F1D1D) !important;
+  color: white !important;
+}
+
+/* Status badges for lists */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  gap: 4px;
+}
+
+/* ===== Filters Section ===== */
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.filter-item {
+  flex: 1;
+  min-width: 180px;
+}
+
+/* ===== Grid Layout ===== */
+.ant-row {
+  margin-right: -12px !important;
+  margin-left: -12px !important;
+}
+
+.ant-col {
+  padding-right: 12px !important;
+  padding-left: 12px !important;
+}
+
+/* ===== Space Component ===== */
+.ant-space {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.ant-space-vertical {
+  align-items: flex-start !important;
+}
+
+/* ===== Login Page ===== */
+.login-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0A0A0A 0%, #121212 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card {
+  background: rgba(20, 20, 20, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  width: 420px;
+  max-width: 90%;
+}
+
+/* ===== Animations ===== */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(147, 51, 234, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0);
+  }
+}
+
+.gradient-text {
+  background: linear-gradient(45deg, #9333EA, #4F46E5, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: gradientFlow 8s ease infinite;
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+.cred-glow:hover {
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.4);
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 768px) {
+  .site-content {
+    padding: 16px !important;
+  }
+
+  .card-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ant-row {
+    margin-right: -8px !important;
+    margin-left: -8px !important;
+  }
+
+  .ant-col {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+  }
+
+  .ant-picker-calendar .ant-picker-content > tbody > tr {
+    height: 80px;
+  }
+
+  .calendar-task-item {
+    padding: 2px 6px;
+  }
+}
